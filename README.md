@@ -2,9 +2,11 @@
 Custom mod to assist the Sabotage game mode for the 10 year release anniversary of Invisible Inc.
 
 RULES
+
 https://iiwiki.werp.site/community:sabotage:rules
 
 Some mandatory task-structuring:
+
 (Ref: <https://iiwiki.werp.site/daemons:index> )
 
 These are just vanilla daemons and can be spawned in.
