@@ -30,3 +30,6 @@ I would recommend all of these be implemented as daemons as well. (Also, if they
 >- pinpoint - Every turn, an agent is located [like a scanning amp]. **Easy, just reuse scan amp code i.e. alarm level 5/6 code and tie it to a daemon.**
 >- specoops - all non-civilian guards at the start of the mission are Spec Ops. **A bit trickier.**
 >- validoops - all daemons initially installed on mainframe devices are Validate. **Very easy.**
+
+Needs to be compatible with the following mods:
+Sim Constructor, Encroaching Danger, CBF, UITR, Incognita Socket, Agent Reserve, Expanded Cheats, No Dialogues Reworked
