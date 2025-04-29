@@ -9,82 +9,63 @@ local modifiers = include( "sim/modifiers" )
 local mission_util = include( "sim/missions/mission_util" )
 local serverdefs = include("modules/serverdefs")
 local mainframe_common = include("sim/abilities/mainframe_common")
+local npc_abilities = include("sim/abilities/npc_abilities")
 local unitghost = include( "sim/unitghost" )
 local simfactory = include( "sim/simfactory" )
 local unitdefs = include( "sim/unitdefs" )
 -- local rand = include( "modules/rand" )
 
--- helper stuff
-local daemon_strings = {
+local createSabotageDaemon = function( stringTbl, override )
+	local extendable = override or mainframe_common.createDaemon( stringTbl )
 
-		ALERT =
-		{
-			NAME = "ALERT",
-			DESC = "All guards become alerted. Enjoy!",
-			SHORT_DESC = "FACILITY ALERT",
-			ACTIVE_DESC = "ALL GUARDS BECOME ALERTED",
-		},
-		
-		ECHO2 =
-		{
-			NAME = "Echo v2.0",
-			DESC = "Reboots a device every turn",
-			SHORT_DESC = "REBOOT PROTOCOL",
-			ACTIVE_DESC = "1 DEVICE REBOOTED EACH TURN",
-		},
-		
-		RUBIKS2 = 
-		{
-			NAME = "RUBIKS v2.0",
-			DESC = "Raises FIREWALLS",
-			SHORT_DESC = "Raises FIREWALLS by two",
-			ACTIVE_DESC = "ALL FIREWALLS RAISED BY DAEMON",
-		},		
+	return util.extend( extendable )
+	{
+		sabotageDaemon = true,
+		noDaemonReversal = true,
+	}
+end
+local daemon_strings = STRINGS.SABOTAGE.DAEMONS
 
-		GATEKEEPER2 =
-		{
-			NAME = "LOCKDOWN",
-			DESC = "Exit elevator is closed for the duration of this Daemon.",
-			SHORT_DESC = "EXIT LOCK",
-			ACTIVE_DESC = "EXIT ELEVATOR IS LOCKED FOR {1} {1:TURN|TURNS}",
-		},
-		
-		VALIDOOPS = 
-		{
-			NAME = "VALIDOOPS",
-			DESC = "All initial daemons have been set to Validate.",
-			SHORT_DESC = "VALIDATION",
-			ACTIVE_DESC = "ALL CURRENT DAEMONS ARE NOW VALIDATE",
-		},
+-- actual implementation of specoops
+local worldgen = include("sim/worldgen")
+local oldThreats = worldgen.generateThreats
 
-		PINPOINT = 
-		{
-			NAME = "PINPOINT",
-			DESC = "A random agent is located each turn.",
-			SHORT_DESC = "AGENT PINPOINT",
-			ACTIVE_DESC = "ONE AGENT LOCATED EACH TURN",
-		},
-		
-		NULLCAMERAS = 
-		{
-			NAME = "ENIGMA",
-			DESC = "Cameras cannot be hacked through the mainframe.",
-			SHORT_DESC = "CAMERAS UNHACKABLE",
-			ACTIVE_DESC = "MAINFRAME CAMERA HACKING BLOCKED",
-		},		
-}
--------------
+function worldgen.generateThreats( cxt, spawnTable, spawnList, ... )
+	if not spawnList then
+		spawnList = simdefs.SPAWN_TABLE[cxt.params.difficultyOptions.spawnTable][ cxt.params.difficulty ]
+    end
+
+    spawnList = util.tdupe(spawnList)
+
+    -- if specoops, replace non-vip spawns with specops
+    log:write("[SABOTAGE] Params: "..util.stringize(cxt.params, 2))
+    if cxt.params.specOops then
+    	for i, unit in pairs(spawnList) do
+    		log:write("[SABOTAGE] "..tostring(unit))
+    	end
+    end
+
+    return oldThreats( cxt, spawnTable, spawnList, ... )
+end
+
 return
+-------------
 {
+	-- base game extended daemons
+	sabotage_modulate = createSabotageDaemon( STRINGS.DAEMONS.ALERTMODULATE, npc_abilities.alertModulate ),
+	sabotage_portcullis = createSabotageDaemon( STRINGS.DLC1.DAEMONS.ALERT_PORTCULLIS, npc_abilities.alertportcullis),
+	sabotage_chiton_2 = createSabotageDaemon( STRINGS.DLC1.DAEMONS.CHITON_2, npc_abilities.chitonAlarm_2),
+	-- base game instant daemons
+	sabotage_bruteForce = createSabotageDaemon( STRINGS.DAEMONS.ALERTBLOWFISH, npc_abilities.alertBruteForce ),
+	sabotage_duplicator = createSabotageDaemon( STRINGS.DAEMONS.ALERTFRACTAL, npc_abilities.alertDuplicator ),
 
 	-- copied and tweaked from Alert daemon from PE by wodzu_93
-	sabotage_alert = util.extend( createDaemon( daemon_strings.ALERT ) )
+	sabotage_alert = util.extend( createSabotageDaemon( daemon_strings.ALERT ) )
 	{
 		icon = "gui/icons/daemon_icons/icon-daemon_alert.png",  -- just reuse PE kwad...
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 		
 		ENDLESS_DAEMONS = false,
 		PROGRAM_LIST = false,
@@ -96,7 +77,7 @@ return
 			sim:dispatchEvent( simdefs.EV_SHOW_DAEMON, { name = self.name, icon=self.icon, txt = util.sformat(self.activedesc, self.duration ) } )
 
 			for _, unit in ipairs(sim:getNPC():getUnits() ) do
-				if not unit:getTraits().pacifist and not unit:isAlerted() then
+				if not unit:getTraits().vip and not unit:isAlerted() then
 					unit:setAlerted(true)
     	        			local x0, y0 = unit:getLocation()
 	            			sim:getNPC():spawnInterest(x0, y0, simdefs.SENSE_RADIO, simdefs.REASON_HUNTING, unit)
@@ -114,7 +95,7 @@ return
 		end,			
 	},
 	
-	sabotage_labyrinth2 = util.extend( createDaemon( STRINGS.DAEMONS.LABYRINTH ) )
+	sabotage_labyrinth2 = util.extend( createSabotageDaemon( STRINGS.DAEMONS.LABYRINTH ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons00012.png",
 
@@ -123,7 +104,6 @@ return
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 
 		onSpawnAbility = function( self, sim, player )
 			self.duration = self.getDuration(self, sim, self.duration)
@@ -132,8 +112,8 @@ return
             self._affectedUnits = {}
             for i, unit in pairs(sim:getPC():getUnits()) do
 		        if unit:getMP() then
-			        unit:addMP( -2 )
-			        unit:addMPMax( -2 )
+			        unit:addMP( -self.drain )
+			        unit:addMPMax( -self.drain )
                     table.insert( self._affectedUnits, unit )
 		        end
 	        end
@@ -144,8 +124,8 @@ return
 		onDespawnAbility = function( self, sim )
             for i, unit in pairs( self._affectedUnits) do
                 if unit:getMP() and unit:isValid() then
-			        unit:addMP( 2 )
-			        unit:addMPMax( 2 )
+			        unit:addMP( self.drain )
+			        unit:addMPMax( self.drain )
                 end
             end
 
@@ -158,13 +138,12 @@ return
 	},	
 
 	--copy of failsafe
-	sabotage_echo2 = util.extend( createDaemon( daemon_strings.ECHO2	 ) )
+	sabotage_echo2 = util.extend( createSabotageDaemon( daemon_strings.ECHO2 ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons00014.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = true,
-		noDaemonReversal = true,
 
 		onSpawnAbility = function( self, sim, player )
 			self.duration = self.getDuration(self, sim, "-")
@@ -191,13 +170,12 @@ return
 		end			
 	},
 	
-	sabotage_paradox2 = util.extend( createDaemon( STRINGS.DAEMONS.PARADOX ) )
+	sabotage_paradox2 = util.extend( createSabotageDaemon( STRINGS.DAEMONS.PARADOX ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons0008.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 		duration = 10,
 		
 		onSpawnAbility = function( self, sim, player )
@@ -217,13 +195,12 @@ return
 		end	
 	},	
 
-	sabotage_rubiks2 = util.extend( createDaemon( daemon_strings.RUBIKS2 ) )
+	sabotage_rubiks2 = util.extend( createSabotageDaemon( daemon_strings.RUBIKS2 ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons0001.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 		iceBoost = 2,
 
 		onSpawnAbility = function( self, sim, player )
@@ -240,13 +217,12 @@ return
 	},
 	
 		-- copy from PE
-		sabotage_lockdown = util.extend( createDaemon( daemon_strings.GATEKEEPER2) )
+		sabotage_lockdown = util.extend( createSabotageDaemon( daemon_strings.GATEKEEPER2) )
 	{
 		icon = "gui/icons/daemon_icons/icon-daemon_gatekeeper.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 		duration = 20,
 
 		ENDLESS_DAEMONS = false,
@@ -291,7 +267,7 @@ return
 				end
 			end
 			sim:addTrigger( simdefs.TRG_END_TURN, self )
-        	end,
+        end,
 
 		onDespawnAbility = function( self, sim )
 			sim:getPC():getTraits().gatekeeper = sim:getPC():getTraits().gatekeeper - 1
@@ -306,13 +282,12 @@ return
 		end,	
 	},
 	
-	sabotage_validoops = util.extend( createDaemon( daemon_strings.VALIDOOPS ) )
+	sabotage_validoops = util.extend( createSabotageDaemon( daemon_strings.VALIDOOPS ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons0004.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = false,
-		noDaemonReversal = true,
 
 		onSpawnAbility = function( self, sim, player )
 			sim:dispatchEvent( simdefs.EV_SHOW_DAEMON, { showMainframe=false, name = self.name, icon=self.icon, txt = self.activedesc, } )	
@@ -329,13 +304,12 @@ return
 		end,
 	},	
 	
-	sabotage_pinpoint = util.extend( createDaemon( daemon_strings.PINPOINT ) )
+	sabotage_pinpoint = util.extend( createSabotageDaemon( daemon_strings.PINPOINT ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons0007.png",
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = true,
-		noDaemonReversal = true,
 
 		onSpawnAbility = function( self, sim, player )
 			self.duration = self.getDuration(self, sim, '-')
@@ -370,13 +344,12 @@ return
 		end		
 	},	
 	
-	sabotage_nullcameras = util.extend( createDaemon( daemon_strings.NULLCAMERAS ) )
+	sabotage_nullcameras = util.extend( createSabotageDaemon( daemon_strings.NULLCAMERAS ) )
 	{
 		icon = "gui/icons/daemon_icons/Daemons00014.png", --Echo icon
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = true,
-		noDaemonReversal = true,
 		
 		onSpawnAbility = function( self, sim, player )
 			self.duration = self.getDuration(self, sim, '-')
@@ -393,5 +366,25 @@ return
 		executeTimedAbility = function( self, sim )
 			sim:getNPC():removeAbility(sim, self )
 		end	
+	},	
+
+	sabotage_specoops = util.extend( createSabotageDaemon( daemon_strings.SPECOOPS ) )
+	{
+		icon = "gui/icons/daemon_icons/icon-daemon_specoops.png",
+		standardDaemon = false,
+		reverseDaemon = false,
+		permanent = false,
+		
+		onSpawnAbility = function( self, sim, player )
+			sim:dispatchEvent( simdefs.EV_SHOW_DAEMON, { showMainframe=false, name = self.name, icon=self.icon, txt = self.activedesc, } )	
+            sim:dispatchEvent( simdefs.EV_WAIT_DELAY, 0.5 * cdefs.SECONDS )
+			
+            -- the daemon is cosmetic. It just does the popup and that's it.
+
+			player:removeAbility(sim, self )
+		end,
+
+		onDespawnAbility = function( self, sim )
+		end,
 	},	
 }

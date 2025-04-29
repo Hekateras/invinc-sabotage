@@ -27,24 +27,26 @@ local function init( modApi )
 	STRINGS.LOADING_TIPS = custom_loading_screen_tips --replace entirely
 	
 	-- wrap for nullcameras daemon effect, copied from Manual Hacking mod
-		local mainframe = include("sim/mainframe")
-		local canBreakIce_old = mainframe.canBreakIce
-		mainframe.canBreakIce = function( sim, targetUnit, equippedProgram, ... )
-			local result, reason = canBreakIce_old( sim, targetUnit, equippedProgram, ... )
-			if equippedProgram == nil then
-				equippedProgram = player:getEquippedProgram()
+	local mainframe = include("sim/mainframe")
+	local canBreakIce_old = mainframe.canBreakIce
+	mainframe.canBreakIce = function( sim, targetUnit, equippedProgram, ... )
+		local result, reason = canBreakIce_old( sim, targetUnit, equippedProgram, ... )
+		if equippedProgram == nil then
+			equippedProgram = player:getEquippedProgram()
+		end
+		if equippedProgram == nil then 
+			return false, STRINGS.UI.REASON.NO_PROGRAM
+		end 
+		local player = sim:getCurrentPlayer()
+		if equippedProgram and player and targetUnit and targetUnit:isValid() and (targetUnit:getTraits().mainframe_status == "active") and sim:getTags().nullcameras then -- flag set by daemon
+			if  targetUnit:getTraits().mainframe_camera then
+				return false, "CAMERA HACKING BLOCKED"
 			end
-			if equippedProgram == nil then 
-				return false, STRINGS.UI.REASON.NO_PROGRAM
-			end 
-			local player = sim:getCurrentPlayer()
-			if equippedProgram and player and targetUnit and targetUnit:isValid() and (targetUnit:getTraits().mainframe_status == "active") and sim:getTags().nullcameras then -- flag set by daemon
-				if  targetUnit:getTraits().mainframe_camera then
-					return false, "CAMERA HACKING BLOCKED"
-				end
-			end
-			return result, reason
-		end		
+		end
+		return result, reason
+	end
+
+	include( scriptPath .. "/input_daemons" )
 end
 
 local function load(modApi, options, params)
@@ -55,6 +57,8 @@ local function load(modApi, options, params)
 	local serverdefs = include( "modules/serverdefs" )
 	
 	if options["sabotage"].enabled then
+	
+		modApi:addNewUIScreen( "modal-select-daemons", scriptPath.."/modal-select-daemons" )
 	
 		--local escape_mission = include( scriptPath .. "/escape_mission" )
 		--modApi:addEscapeScripts(escape_mission)	
@@ -80,12 +84,14 @@ local function load(modApi, options, params)
 	
 end
 
--- local function initStrings(modApi)
-	-- local dataPath = modApi:getDataPath()
-	-- local scriptPath = modApi:getScriptPath()
-	-- local MOD_STRINGS = include( scriptPath .. "/strings" )
-	-- modApi:addStrings( dataPath, "SABOTAGE", MOD_STRINGS)
--- end
+local function initStrings(modApi)
+	local dataPath = modApi:getDataPath()
+	local scriptPath = modApi:getScriptPath()
+	local MOD_STRINGS = include( scriptPath .. "/strings" )
+	modApi:addStrings( dataPath, "SABOTAGE", MOD_STRINGS)
+	
+	modApi.requirements = {"Incognita Socket: Online Multiplayer"}
+end
 
 -- local function lateLoad(modApi, options, params, allOptions)
 -- end
@@ -97,5 +103,5 @@ return {
 	init = init,
 	load = load,
 	-- unload = unload,
-	-- initStrings = initStrings,
+	initStrings = initStrings,
 }
