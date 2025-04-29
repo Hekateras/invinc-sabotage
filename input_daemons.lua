@@ -176,7 +176,7 @@ function mapScreen:closePreview(preview_screen, situation, go_to_there, ...)
 	oldClosePreview(self, preview_screen, situation, go_to_there, ...)
 end
 
-AGENT_CONNECTION_DONE =
+local AGENT_CONNECTION_DONE =
 {       
 trigger = "finishedAgentConnection",
 fn = function( sim, evData )
