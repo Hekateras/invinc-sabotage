@@ -68,6 +68,8 @@ local daemonDict = {
 ["specoops"] = "sabotage_specoops", --custom -- TBC --probably not a daemon?
 }
 
+local storySituations = {["mid_1"] = true, ["mid_2"] = true, ["ending_1"] = true }
+
 local select_daemon_dialog = class()
 
 local function onClickSave( dialog )
@@ -174,13 +176,34 @@ function mapScreen:closePreview(preview_screen, situation, go_to_there, ...)
 	oldClosePreview(self, preview_screen, situation, go_to_there, ...)
 end
 
-local hookFn = function( script, sim )
+AGENT_CONNECTION_DONE =
+{       
+trigger = "finishedAgentConnection",
+fn = function( sim, evData )
+    return true
+end,
+},
+
+local hookFn_story = function( script, sim )
 
 	script:waitFor( mission_util.UI_INITIALIZED )
-	
-	for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
-		if abilitydefs.lookupAbility(daemonID) then
-			sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)
+	if storySituations[self:getParams().situationName] then
+		for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
+			if abilitydefs.lookupAbility(daemonID) then
+				sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)
+			end
+		end
+	end
+end
+
+local hookFn_escape = function( script, sim )
+
+	script:waitFor( AGENT_CONNECTION_DONE )
+	if storySituations[self:getParams().situationName] then
+		for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
+			if abilitydefs.lookupAbility(daemonID) then
+				sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)
+			end
 		end
 	end
 end
@@ -193,7 +216,11 @@ simengine.init = function(self,...)
 	oldSimInit(self, ...)
 	
 	if self:getParams().agency.sabotageDaemons then
-		self:getLevelScript():addHook( "SABOTAGE-DAEMONS", hookFn )
+		if storySituations[self:getParams().situationName] then
+			self:getLevelScript():addHook( "SABOTAGE-DAEMONS-STORY", hookFn_story )
+		else
+			self:getLevelScript():addHook( "SABOTAGE-DAEMONS-ESCAPE", hookFn_escape )
+		end
 	end
 end
 
