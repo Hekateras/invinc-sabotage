@@ -15,6 +15,42 @@ local simfactory = include( "sim/simfactory" )
 local unitdefs = include( "sim/unitdefs" )
 -- local rand = include( "modules/rand" )
 
+-- actual implementation of specoops
+local worldgen = include("sim/worldgen")
+local generateThreats_old = worldgen.generateThreats
+
+function worldgen.generateThreats( cxt, spawnTable, spawnList, ... )
+	if not spawnList then
+		spawnList = simdefs.SPAWN_TABLE[cxt.params.difficultyOptions.spawnTable][ cxt.params.difficulty ]
+    end
+
+    -- if specoops, replace non-vip spawns with specops
+    if cxt.params.specOops then
+    	--log:write("[SABOTAGE] Applying SpecOops: "..util.stringize(spawnTable, 4))
+    	for unitTier, unitTable in pairs(spawnTable) do
+    		util.tclear(unitTable)
+    		table.insert(unitTable, { "ko_specops", 100 })
+    	end
+    end
+
+    --log:write("[SABOTAGE] Result: "..util.stringize(spawnTable, 4))
+
+    return generateThreats_old( cxt, spawnTable, spawnList, ... )
+end
+
+-- this is arcane to me, but it works in AGP so..? -Sizzle
+local function generateThreatsWrapper( ... )
+	return worldgen.generateThreats( ... )
+end
+local upvName, upvVal
+local upvIdx = 0
+repeat
+	upvIdx = upvIdx + 1
+	upvName, upvVal = debug.getupvalue(worldgen.worlds.ftm.generateUnits, upvIdx)
+until ( upvName == nil or upvName == "generateThreats" )
+
+debug.setupvalue( worldgen.worlds.ftm.generateUnits, upvIdx, generateThreatsWrapper )
+
 local createSabotageDaemon = function( stringTbl, override )
 	local extendable = override or mainframe_common.createDaemon( stringTbl )
 
@@ -26,31 +62,8 @@ local createSabotageDaemon = function( stringTbl, override )
 end
 local daemon_strings = STRINGS.SABOTAGE.DAEMONS
 
--- actual implementation of specoops
-local worldgen = include("sim/worldgen")
-local oldThreats = worldgen.generateThreats
-
-function worldgen.generateThreats( cxt, spawnTable, spawnList, ... )
-	if not spawnList then
-		spawnList = simdefs.SPAWN_TABLE[cxt.params.difficultyOptions.spawnTable][ cxt.params.difficulty ]
-    end
-
-    spawnList = util.tdupe(spawnList)
-
-    -- if specoops, replace non-vip spawns with specops
-    log:write("[SABOTAGE] Params: "..util.stringize(cxt.params, 2))
-    if cxt.params.specOops then
-    	for i, unit in pairs(spawnList) do
-    		log:write("[SABOTAGE] "..tostring(unit))
-    	end
-    end
-
-    return oldThreats( cxt, spawnTable, spawnList, ... )
-end
-
-return
 -------------
-{
+local daemons = {
 	-- base game extended daemons
 	sabotage_modulate = createSabotageDaemon( STRINGS.DAEMONS.ALERTMODULATE, npc_abilities.alertModulate ),
 	sabotage_portcullis = createSabotageDaemon( STRINGS.DLC1.DAEMONS.ALERT_PORTCULLIS, npc_abilities.alertportcullis),
@@ -388,3 +401,5 @@ return
 		end,
 	},	
 }
+
+return daemons
