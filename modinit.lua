@@ -46,6 +46,14 @@ local function init( modApi )
 		return result, reason
 	end
 
+	--wrap makeAgentConnection to issue the trigger for the hook.
+	local mission_util = include("sim/missions/mission_util")
+	local makeAgentConnection_old = mission_util.makeAgentConnection
+	mission_util.makeAgentConnection = function( script, sim, ... )
+		makeAgentConnection_old(script, sim, ...)
+		sim:triggerEvent( "finishedAgentConnection" )
+	end	
+
 	include( scriptPath .. "/input_daemons" )
 end
 
