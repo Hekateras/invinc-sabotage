@@ -165,7 +165,7 @@ function mapScreen:closePreview(preview_screen, situation, go_to_there, ...)
 		self._campaign.agency.sabotageDaemons = select_daemon_dialog:show(  )
 	end
 	-- set up specoops guard tableswap
-	log:write("[SABOTAGE] Daemon list: "..util.stringize(self._campaign.agency.sabotageDaemons, 2))
+	-- log:write("[SABOTAGE] Daemon list: "..util.stringize(self._campaign.agency.sabotageDaemons, 2))
 	for i, daemon in pairs(self._campaign.agency.sabotageDaemons) do
 		if daemon == "sabotage_specoops" then
 			self._campaign.missionParams.specOops = true
@@ -182,12 +182,12 @@ trigger = "finishedAgentConnection",
 fn = function( sim, evData )
     return true
 end,
-},
+}
 
 local hookFn_story = function( script, sim )
 
 	script:waitFor( mission_util.UI_INITIALIZED )
-	if storySituations[self:getParams().situationName] then
+	if storySituations[sim:getParams().situationName] then
 		for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
 			if abilitydefs.lookupAbility(daemonID) then
 				sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)
@@ -199,7 +199,7 @@ end
 local hookFn_escape = function( script, sim )
 
 	script:waitFor( AGENT_CONNECTION_DONE )
-	if storySituations[self:getParams().situationName] then
+	if storySituations[sim:getParams().situationName] then
 		for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
 			if abilitydefs.lookupAbility(daemonID) then
 				sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)
@@ -237,7 +237,7 @@ function mainframe_panel:addMainframeProgram( player, ability, idx, ... )
 	local results = { oldAddMainframeProgram( self, player, ability, idx, ... ) }
 
 	local widget = self._panel.binder:tryBind( "enemyAbility"..idx )
-    if widget and ability.is_sabotage_daemon then
+    if widget and player == self._hud._game.simCore:getNPC() and ability.is_sabotage_daemon then
     	widget.binder.btn:setColor( unpack(CLR_SABOTAGE) )
     end
 

@@ -17,8 +17,7 @@ local function init( modApi )
 	local serverdefs = include( "modules/serverdefs" )
 
 	-- reusing PE GUI for daemon icons
-	KLEIResourceMgr.MountPackage( dataPath .. "/programs_extended_gui.kwad", "data" )
-	KLEIResourceMgr.MountPackage( dataPath .. "/programs_extended_gui2.kwad", "data" )
+	KLEIResourceMgr.MountPackage( dataPath .. "/pe_gui_daemons.kwad", "data" )
 	--KLEIResourceMgr.MountPackage( dataPath .. "/anims.kwad", "data" ) 
 	
 	modApi:addGenerationOption("sabotage",  "sabotage", "sabotage description", {enabled = true, noUpdate = true} )
