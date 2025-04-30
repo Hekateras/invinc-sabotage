@@ -164,14 +164,6 @@ function mapScreen:closePreview(preview_screen, situation, go_to_there, ...)
 	if go_to_there and abilitydefs.lookupAbility("sabotage_validoops") and not (rawget(_G,"multiMod") and multiMod:getUplink()) then
 		self._campaign.agency.sabotageDaemons = select_daemon_dialog:show(  )
 	end
-	-- set up specoops guard tableswap
-	-- log:write("[SABOTAGE] Daemon list: "..util.stringize(self._campaign.agency.sabotageDaemons, 2))
-	for i, daemon in pairs(self._campaign.agency.sabotageDaemons) do
-		if daemon == "sabotage_specoops" then
-			self._campaign.missionParams.specOops = true
-			break
-		end
-	end
 
 	oldClosePreview(self, preview_screen, situation, go_to_there, ...)
 end
@@ -199,7 +191,7 @@ end
 local hookFn_escape = function( script, sim )
 
 	script:waitFor( AGENT_CONNECTION_DONE )
-	if storySituations[sim:getParams().situationName] then
+	if not storySituations[sim:getParams().situationName] then
 		for i, daemonID in ipairs( sim:getParams().agency.sabotageDaemons ) do
 			if abilitydefs.lookupAbility(daemonID) then
 				sim:getNPC():addMainframeAbility( sim, daemonID, nil, 0)

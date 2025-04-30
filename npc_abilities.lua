@@ -13,7 +13,10 @@ local npc_abilities = include("sim/abilities/npc_abilities")
 local unitghost = include( "sim/unitghost" )
 local simfactory = include( "sim/simfactory" )
 local unitdefs = include( "sim/unitdefs" )
+local speechdefs = include("sim/speechdefs")
 -- local rand = include( "modules/rand" )
+
+local DEFAULT_ABILITY = mainframe_common.DEFAULT_ABILITY
 
 -- actual implementation of specoops
 local worldgen = include("sim/worldgen")
@@ -23,17 +26,18 @@ function worldgen.generateThreats( cxt, spawnTable, spawnList, ... )
 	if not spawnList then
 		spawnList = simdefs.SPAWN_TABLE[cxt.params.difficultyOptions.spawnTable][ cxt.params.difficulty ]
     end
-
+	
     -- if specoops, replace non-vip spawns with specops
-    if cxt.params.specOops then
+    if cxt.params.agency.sabotageDaemons and array.find( cxt.params.agency.sabotageDaemons, "sabotage_specoops" ) then
+	
+		local oldSpawnTable = spawnTable
+		spawnTable = {}
+		
     	--log:write("[SABOTAGE] Applying SpecOops: "..util.stringize(spawnTable, 4))
-    	for unitTier, unitTable in pairs(spawnTable) do
-    		util.tclear(unitTable)
-    		table.insert(unitTable, { "ko_specops", 100 })
+    	for unitTier, unitTable in pairs(oldSpawnTable) do
+    		spawnTable[unitTier] = {{ "ko_specops", 100 }}
     	end
     end
-
-    --log:write("[SABOTAGE] Result: "..util.stringize(spawnTable, 4))
 
     return generateThreats_old( cxt, spawnTable, spawnList, ... )
 end
@@ -167,8 +171,9 @@ local daemons = {
         onTrigger = function( self, sim, evType, evData, userUnit )
 	    	if evType == simdefs.TRG_START_TURN and sim:getCurrentPlayer():isPC() then
 				--ref: mission_util.doRecapturePresentation = function(script, sim, cyberlab, agent, climax, numItems)
-				local script = sim:getLevelScript()
-				mission_util.doRecapturePresentation(script, sim, nil, nil, nil, 1)
+				-- local script = sim:getLevelScript()
+				-- mission_util.doRecapturePresentation(script, sim, nil, nil, nil, 1)
+				sim:triggerEvent(simdefs.TRG_RECAPTURE_DEVICES, { reboots = 1} )
             else
                 DEFAULT_ABILITY.onTrigger( self, sim, evType, evData, userUnit )
             end

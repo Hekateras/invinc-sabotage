@@ -5,12 +5,14 @@ local custom_loading_screen_tips = {
 "Welcome to SABOTAGE MODE!",
 }
 
+local function earlyInit(modApi)
+	modApi.requirements = {"Sim Constructor", "Contingency Plan", "Incognita Socket: Online Multiplayer", "Function Library"}
+end
+
 local function init( modApi )
 	local dataPath = modApi:getDataPath()
 	local scriptPath = modApi:getScriptPath()
 	
-	modApi.requirements = {"Sim Constructor", "Contingency Plan",}
-		
 	local abilitydefs = include( "sim/abilitydefs" )
 	local simquery = include( "sim/simquery" )
 	local simunit = include( "sim/simunit" )
@@ -96,8 +98,6 @@ local function initStrings(modApi)
 	local scriptPath = modApi:getScriptPath()
 	local MOD_STRINGS = include( scriptPath .. "/strings" )
 	modApi:addStrings( dataPath, "SABOTAGE", MOD_STRINGS)
-	
-	modApi.requirements = {"Incognita Socket: Online Multiplayer"}
 end
 
 -- local function lateLoad(modApi, options, params, allOptions)
@@ -107,6 +107,7 @@ end
 -- end
 
 return {
+	earlyInit = earlyInit,
 	init = init,
 	load = load,
 	-- unload = unload,
