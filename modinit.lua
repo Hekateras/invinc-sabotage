@@ -3,6 +3,8 @@ local simdefs = include( "sim/simdefs" )
 
 local custom_loading_screen_tips = {
 "Welcome to SABOTAGE MODE!",
+"Fun fact: Invisible, Inc. is the best game ever made.",
+"Beware the lamp.",
 }
 
 local function earlyInit(modApi)
@@ -20,7 +22,8 @@ local function init( modApi )
 
 	-- reusing PE GUI for daemon icons
 	KLEIResourceMgr.MountPackage( dataPath .. "/pe_gui_daemons.kwad", "data" )
-	--KLEIResourceMgr.MountPackage( dataPath .. "/anims.kwad", "data" ) 
+	KLEIResourceMgr.MountPackage( dataPath .. "/gui_hats.kwad", "data" )
+	KLEIResourceMgr.MountPackage( dataPath .. "/anims_hats.kwad", "data" )
 	
 	modApi:addGenerationOption("sabotage",  "sabotage", "sabotage description", {enabled = true, noUpdate = true} )
 	
@@ -93,6 +96,27 @@ local function load(modApi, options, params)
 	
 end
 
+local function lateLoad( modApi, options)
+	local scriptPath = modApi:getScriptPath()
+	local dataPath = modApi:getDataPath()
+	local commondefs = include( "sim/unitdefs/commondefs" )
+	local AGENT_ANIMS = commondefs.AGENT_ANIMS
+	local GUARD_ANIMS = commondefs.GUARD_ANIMS	
+		
+	local anims = include("animdefs")
+	for k,v in pairs(anims.defs) do
+		if v.animMap and (v.animMap == GUARD_ANIMS) then
+			if v.build and (type(v.build) == "table") then	
+				table.insert(v.build,"data/anims/characters/hats/party_hat.abld" )
+			end
+			
+			if v.grp_build and (type(v.grp_build) == "table") then	
+				table.insert(v.grp_build,"data/anims/characters/hats/grp_party_hat.abld" )
+			end
+		end
+	end						
+end
+
 local function initStrings(modApi)
 	local dataPath = modApi:getDataPath()
 	local scriptPath = modApi:getScriptPath()
@@ -110,6 +134,7 @@ return {
 	earlyInit = earlyInit,
 	init = init,
 	load = load,
+	lateLoad = lateLoad,
 	-- unload = unload,
 	initStrings = initStrings,
 }
