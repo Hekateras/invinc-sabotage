@@ -35,18 +35,11 @@ local function init( modApi )
 	local canBreakIce_old = mainframe.canBreakIce
 	mainframe.canBreakIce = function( sim, targetUnit, equippedProgram, ... )
 		local result, reason = canBreakIce_old( sim, targetUnit, equippedProgram, ... )
-		if equippedProgram == nil then
-			equippedProgram = player:getEquippedProgram()
+		
+		if result and targetUnit:getTraits().mainframe_camera and sim:getTags().nullcameras then -- flag set by daemon
+			return false, "CAMERA HACKING BLOCKED"
 		end
-		if equippedProgram == nil then 
-			return false, STRINGS.UI.REASON.NO_PROGRAM
-		end 
-		local player = sim:getCurrentPlayer()
-		if equippedProgram and player and targetUnit and targetUnit:isValid() and (targetUnit:getTraits().mainframe_status == "active") and sim:getTags().nullcameras then -- flag set by daemon
-			if  targetUnit:getTraits().mainframe_camera then
-				return false, "CAMERA HACKING BLOCKED"
-			end
-		end
+		
 		return result, reason
 	end
 

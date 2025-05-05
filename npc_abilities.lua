@@ -46,14 +46,8 @@ end
 local function generateThreatsWrapper( ... )
 	return worldgen.generateThreats( ... )
 end
-local upvName, upvVal
-local upvIdx = 0
-repeat
-	upvIdx = upvIdx + 1
-	upvName, upvVal = debug.getupvalue(worldgen.worlds.ftm.generateUnits, upvIdx)
-until ( upvName == nil or upvName == "generateThreats" )
 
-debug.setupvalue( worldgen.worlds.ftm.generateUnits, upvIdx, generateThreatsWrapper )
+upvalueUtil.findAndReplace( worldgen.worlds.ftm.generateUnits, "generateThreats", generateThreatsWrapper )
 
 local createSabotageDaemon = function( stringTbl, override )
 	local extendable = override or mainframe_common.createDaemon( stringTbl )
@@ -170,9 +164,6 @@ local daemons = {
 
         onTrigger = function( self, sim, evType, evData, userUnit )
 	    	if evType == simdefs.TRG_START_TURN and sim:getCurrentPlayer():isPC() then
-				--ref: mission_util.doRecapturePresentation = function(script, sim, cyberlab, agent, climax, numItems)
-				-- local script = sim:getLevelScript()
-				-- mission_util.doRecapturePresentation(script, sim, nil, nil, nil, 1)
 				sim:triggerEvent(simdefs.TRG_RECAPTURE_DEVICES, { reboots = 1} )
             else
                 DEFAULT_ABILITY.onTrigger( self, sim, evType, evData, userUnit )
@@ -397,7 +388,9 @@ local daemons = {
 			sim:dispatchEvent( simdefs.EV_SHOW_DAEMON, { showMainframe=false, name = self.name, icon=self.icon, txt = self.activedesc, } )	
             sim:dispatchEvent( simdefs.EV_WAIT_DELAY, 0.5 * cdefs.SECONDS )
 			
-            -- the daemon is cosmetic. It just does the popup and that's it.
+            -- This changes the alarm level 3+4 guards. Starting guards changed in generateThreats.
+			
+			sim._patrolGuard = {{ "ko_specops", 100 }}
 
 			player:removeAbility(sim, self )
 		end,

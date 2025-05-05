@@ -66,8 +66,16 @@ function select_daemon_dialog:show()
 	self._list:clearItems()
 	self._list._scrollbar:setVisible( false )
 	
+	local daemonSort = {}
+	
 	for k, v in pairs( daemonDict ) do
-		local widget = self._list:addItem( v, "CheckOption" )
+		table.insert( daemonSort, k )
+	end
+	
+	table.sort( daemonSort )
+	
+	for i, k in ipairs( daemonSort ) do
+		local widget = self._list:addItem( daemonDict[k], "CheckOption" )
 		widget.binder.widget:setText( k )
 	end
 	
