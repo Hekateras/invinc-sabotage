@@ -12,11 +12,12 @@ local sabotage_jolt =
 		--hotkey =  "abilityOverwatch",
 		profile_icon = "gui/icons/item_icons/items_icon_small/icon-item_heart_monitor_small.png",
 		alwaysShow = true,
-		HUDpriority = 1,
+		--HUDpriority = 1,
 		--usesAction = true,
 		iconColor= util.color( 166/255, 0/255, 255/255 ),
+		iconColorHover= util.color( 1,1,1 )  ,
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
-			return "SPAWN JOLT DAEMON"
+			return abilityutil.overwatch_tooltip( hud, self, sim, abilityOwner, "SPAWN BLOWFISH" )
 		end,
 
 		canUseAbility = function( self, sim, unit )
