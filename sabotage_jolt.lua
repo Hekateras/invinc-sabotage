@@ -14,6 +14,7 @@ local sabotage_jolt =
 		alwaysShow = true,
 		HUDpriority = 1,
 		--usesAction = true,
+		iconColor= util.color( 166/255, 0/255, 255/255 ),
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
 			return "SPAWN JOLT DAEMON"
 		end,

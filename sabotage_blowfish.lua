@@ -14,6 +14,7 @@ local sabotage_blowfish =
 		alwaysShow = true,
 		HUDpriority = 2,
 		--usesAction = true,
+		iconColor= util.color( 235/255, 0/255, 255/255 ),
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
 			return "SPAWN BLOWFISH DAEMON"
 		end,
