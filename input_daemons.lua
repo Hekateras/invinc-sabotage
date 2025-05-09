@@ -26,6 +26,7 @@ local daemonDict = {
 ["pinpoint"] = "sabotage_pinpoint", --custom
 ["nullcameras"] = "sabotage_nullcameras", --custom --TBC
 ["specoops"] = "sabotage_specoops", --custom -- TBC --probably not a daemon?
+["brighter"] = "sabotage_brighter",
 }
 
 local storySituations = {["mid_1"] = true, ["mid_2"] = true, ["ending_1"] = true }
