@@ -63,6 +63,14 @@ local SABOTAGE_STRINGS = {
 			SHORT_DESC = "CAMERAS UNHACKABLE",
 			ACTIVE_DESC = "MAINFRAME CAMERA HACKING BLOCKED",
 		},
+		
+		BRIGHTER = 
+		{
+			NAME = "ILLUMINATE",
+			DESC = "The cover in certain rooms is replaced with K&O Lamps.",
+			SHORT_DESC = "LAMPED.",
+			ACTIVE_DESC = "LAMPS INSTEAD OF COVER.",
+		},		
 	},	
 }
 
