@@ -1,5 +1,6 @@
 local util = include("modules/util")
 local simdefs = include( "sim/simdefs" )
+local array = include( "modules/array" )
 
 local custom_loading_screen_tips = {
 "Welcome to SABOTAGE MODE!",
@@ -52,6 +53,109 @@ local function init( modApi )
 	end	
 
 	include( scriptPath .. "/input_daemons" )
+	
+	--BRIGHTER
+	-- replace decor with lamps if daemon is active, but only in entry+objective rooms
+	local simengine = include("sim/engine")
+	local oldInit = simengine.init
+	
+	function simengine.init( self, params, levelData, ... )
+		self._levelOutput = levelData:parseBoard( params.seed, params )
+		
+		local cover_cells = {}
+		local changed_cells = {}
+		
+		-- collect all cells which provide both impass and cover (impass check precludes cells with guards on them)
+		for i, entry in pairs(self._levelOutput.map) do
+			if type(entry) == "table" then
+				for i, subentry in pairs(entry) do
+					log:write("LOG subentry")
+					log:write(util.stringize(subentry,3))
+					if subentry.cover and subentry.impass and (subentry.impass > 0) and subentry.x and subentry.y and (subentry.procgenRoom.tags["entry"] or subentry.procgenRoom.tags["objective"]) then
+						local cover_cell = {subentry.x, subentry.y}
+						table.insert(cover_cells,cover_cell)
+						-- subentry.cover = nil
+					end
+				end
+			end
+		end
+		
+		-- remove cells that provide cover because there's a non-decor unit on them. prior check for impass we won't have sampled cells with guards
+		for k, unit in pairs(self._levelOutput.units) do
+			if unit.x and unit.y and unit.template and not (unit.template == "security_camera_1x1")  then
+				for i = #cover_cells, 1, -1 do
+					local cell = cover_cells[i]
+					if (cell[1] == unit.x) and (cell[2] == unit.y) then
+						table.remove(cover_cells, i)
+					end
+				end
+			end
+		end		
+		
+		if params.agency.sabotageDaemons and array.find( params.agency.sabotageDaemons, "sabotage_brighter" ) then
+		-- Issue: For an e.g. 2x3 decor item on the map, only one of those tiles is assigned the decor kanim. To fix this and prevent empty tiles:
+		-- go through cover_cells which are cells that provide cover but do not have units on them. first, if there are decor tiles matching those x/y coords, replace their kanims with lamps. then, go through the remaining cover_cells entries and add a matching new entry to decos.
+			for i = #cover_cells, 1, -1 do
+				local cell = cover_cells[i]
+				for k, decor in pairs( self._levelOutput.decos ) do
+					if decor.x and decor.y and (cell[1] == decor.x) and (cell[2]  == decor.y) then
+						decor.kanim = "decor_ko_office_lamp"
+						local changed_cell = {decor.x, decor.y}
+						table.insert(changed_cells, changed_cell)
+						table.remove(cover_cells, i)
+					end
+				end
+			end
+			for i, cell in pairs(cover_cells) do		
+				local new_lamp = {
+				x = cell[1],
+				y = cell[2],
+				kanim = "decor_ko_office_lamp",
+				facing = 2,
+				}
+				table.insert(self._levelOutput.decos, new_lamp)
+				table.insert(changed_cells, cell)
+			end
+		end
+
+				
+		-- go back to the list of cells and remove sightblock, everywhere we've put a lamp
+		for i, entry in pairs(self._levelOutput.map) do
+			if type(entry) == "table" then
+				for i, subentry in pairs(entry) do
+					if subentry.sightblock and subentry.x and subentry.y then
+						for k,v in pairs(changed_cells) do
+							if (v[1] == subentry.x) and (v[2] == subentry.y) then
+								subentry.sightblock = 0
+							end
+						end
+					end
+				end
+			end
+		end				
+				
+		oldInit( self, params, levelData, ... ) --for some reason, sightblock needs to be changed before oldInit to take effect, cover after oldInit
+			
+		-- go back to the list of cells and remove cover everywhere we've put a lamp
+		for i, entry in pairs(self._levelOutput.map) do
+			if type(entry) == "table" then
+				for i, subentry in pairs(entry) do
+					if subentry.cover and subentry.x and subentry.y then
+						for k,v in pairs(changed_cells) do
+							if (v[1] == subentry.x) and (v[2] == subentry.y) then
+								-- log:write("LOG CHANGING COVER")
+								subentry.cover = 0
+								subentry.sightblock = 0
+								-- log:write(util.stringize(subentry,3))
+							end
+						end
+					end
+				end
+			end
+		end
+		
+	end	
+	
 end
 
 local function load(modApi, options, params)
