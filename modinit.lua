@@ -69,7 +69,7 @@ local function init( modApi )
 		for i, entry in pairs(self._levelOutput.map) do
 			if type(entry) == "table" then
 				for i, subentry in pairs(entry) do
-					if subentry.cover and subentry.impass and (subentry.impass > 0) and subentry.x and subentry.y and (subentry.procgenRoom.tags["entry"] or subentry.procgenRoom.tags["objective"]) then
+					if subentry.cover and subentry.impass and (subentry.impass > 0) and subentry.x and subentry.y and (subentry.procgenRoom.tags["entry"] or subentry.procgenRoom.tags["hall"] or subentry.procgenRoom.tags["objective"]) then
 						local cover_cell = {subentry.x, subentry.y}
 						table.insert(cover_cells,cover_cell)
 						-- subentry.cover = nil
