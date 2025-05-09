@@ -154,6 +154,17 @@ local function init( modApi )
 		
 	end	
 	
+	--SPAWN DAEMON ABILITIES
+	local simengine_spawnUnit_old = simengine.spawnUnit
+	simengine.spawnUnit = function( self, unit, ... )
+		simengine_spawnUnit_old( self, unit, ... )
+		if unit:isPC() then
+			unit:giveAbility("sabotage_jolt")
+			unit:giveAbility("sabotage_validate")
+			unit:giveAbility("sabotage_blowfish")
+		end
+	end
+	
 end
 
 local function load(modApi, options, params)
@@ -188,6 +199,10 @@ local function load(modApi, options, params)
 		end		
 
 	end	
+	
+	modApi:addAbilityDef( "sabotage_jolt", scriptPath .."/sabotage_jolt" )
+	modApi:addAbilityDef( "sabotage_validate", scriptPath .."/sabotage_validate" )
+	modApi:addAbilityDef( "sabotage_blowfish", scriptPath .."/sabotage_blowfish" )
 	
 end
 
