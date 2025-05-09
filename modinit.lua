@@ -69,8 +69,6 @@ local function init( modApi )
 		for i, entry in pairs(self._levelOutput.map) do
 			if type(entry) == "table" then
 				for i, subentry in pairs(entry) do
-					log:write("LOG subentry")
-					log:write(util.stringize(subentry,3))
 					if subentry.cover and subentry.impass and (subentry.impass > 0) and subentry.x and subentry.y and (subentry.procgenRoom.tags["entry"] or subentry.procgenRoom.tags["objective"]) then
 						local cover_cell = {subentry.x, subentry.y}
 						table.insert(cover_cells,cover_cell)
