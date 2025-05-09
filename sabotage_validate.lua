@@ -17,7 +17,11 @@ local sabotage_validate =
 		iconColorHover= util.color( 1,1,1 )  ,
 		--usesAction = true,
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
-			return abilityutil.overwatch_tooltip( hud, self, sim, abilityOwner, "SPAWN BLOWFISH" )
+
+
+			return "SPAWN VALIDATE DAEMON"
+
+
 		end,
 
 		canUseAbility = function( self, sim, unit )

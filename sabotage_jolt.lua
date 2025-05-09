@@ -17,7 +17,11 @@ local sabotage_jolt =
 		iconColor= util.color( 166/255, 0/255, 255/255 ),
 		iconColorHover= util.color( 1,1,1 )  ,
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
-			return abilityutil.overwatch_tooltip( hud, self, sim, abilityOwner, "SPAWN BLOWFISH" )
+
+
+			return "SPAWN JOLT DAEMON"
+
+
 		end,
 
 		canUseAbility = function( self, sim, unit )

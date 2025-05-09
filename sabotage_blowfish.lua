@@ -17,9 +17,12 @@ local sabotage_blowfish =
 		iconColor= util.color( 235/255, 0/255, 255/255 ),
 		iconColorHover= util.color( 1,1,1 )  ,
 		onTooltip = function( self, hud, sim, abilityOwner, abilityUser )
-			return abilityutil.overwatch_tooltip( hud, self, sim, abilityOwner, "SPAWN BLOWFISH" )
-		end,
 
+
+			return "SPAWN BLOWFISH DAEMON"
+
+
+		end,
 		canUseAbility = function( self, sim, unit )
 
 			if unit:getTraits().usedSabotageDaemon then 
