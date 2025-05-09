@@ -398,6 +398,26 @@ local daemons = {
 		onDespawnAbility = function( self, sim )
 		end,
 	},	
+
+	sabotage_brighter = util.extend( createSabotageDaemon( daemon_strings.BRIGHTER ) )
+	{
+		icon = "gui/icons/daemon_icons/icon-daemon_specoops.png", -- custom icon plz?
+		standardDaemon = false,
+		reverseDaemon = false,
+		permanent = true,
+		
+		onSpawnAbility = function( self, sim, player )
+			sim:dispatchEvent( simdefs.EV_SHOW_DAEMON, { showMainframe=false, name = self.name, icon=self.icon, txt = self.activedesc, } )	
+            		sim:dispatchEvent( simdefs.EV_WAIT_DELAY, 0.5 * cdefs.SECONDS )
+			
+		-- this doesn't actually do anything.
+
+			player:removeAbility(sim, self )
+		end,
+
+		onDespawnAbility = function( self, sim )
+		end,
+	},	
 }
 
 return daemons
