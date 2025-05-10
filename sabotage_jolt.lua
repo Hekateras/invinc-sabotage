@@ -26,6 +26,10 @@ local sabotage_jolt =
 
 		canUseAbility = function( self, sim, unit )
 
+			if unit:getTraits().usedSabotageDaemon then 
+				return false, "ALREADY SPAWNED DAEMON"
+			end
+
 			if unit:isKO() then
 				return false, STRINGS.UI.REASON.UNIT_IS_KO
 			end		
@@ -34,7 +38,7 @@ local sabotage_jolt =
 		end,
 		
 		executeAbility = function( self, sim, unit, ownerUnit, targetID )
-			if unit:isValid() and not unit:getTraits().usedSabotageDaemon then
+			if unit:isValid() then
 				sim:getNPC():addMainframeAbility( sim, "jolt", nil, 0)
 				--bruteForce
 				--validate

@@ -25,6 +25,9 @@ local sabotage_blowfish =
 		end,
 		canUseAbility = function( self, sim, unit )
 
+			if unit:getTraits().usedSabotageDaemon then 
+				return false, "ALREADY SPAWNED DAEMON"
+			end
 
 			if unit:isKO() then
 				return false, STRINGS.UI.REASON.UNIT_IS_KO
@@ -34,7 +37,7 @@ local sabotage_blowfish =
 		end,
 		
 		executeAbility = function( self, sim, unit, ownerUnit, targetID )
-			if unit:isValid() and not unit:getTraits().usedSabotageDaemon then
+			if unit:isValid() then
 				sim:getNPC():addMainframeAbility( sim, "bruteForce", nil, 0)
 				--bruteForce
 				--validate
