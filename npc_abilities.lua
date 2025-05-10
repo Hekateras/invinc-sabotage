@@ -401,7 +401,7 @@ local daemons = {
 
 	sabotage_brighter = util.extend( createSabotageDaemon( daemon_strings.BRIGHTER ) )
 	{
-		icon = "gui/icons/daemon_icons/icon-daemon_specoops.png", -- custom icon plz?
+		icon = "gui/icons/daemon_icons/icon-daemon_brighten.png", -- custom icon plz?
 		standardDaemon = false,
 		reverseDaemon = false,
 		permanent = true,
