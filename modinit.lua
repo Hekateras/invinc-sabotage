@@ -158,7 +158,7 @@ local function init( modApi )
 	local simengine_spawnUnit_old = simengine.spawnUnit
 	simengine.spawnUnit = function( self, unit, ... )
 		simengine_spawnUnit_old( self, unit, ... )
-		if unit:isPC() then
+		if unit:isPC() and unit:getTraits().isAgent then
 			unit:giveAbility("sabotage_jolt")
 			unit:giveAbility("sabotage_validate")
 			unit:giveAbility("sabotage_blowfish")
